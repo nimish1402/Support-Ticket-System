@@ -1,7 +1,7 @@
 import json
 import logging
-from typing import Optional
 
+import requests
 from django.conf import settings
 
 logger = logging.getLogger(__name__)
@@ -13,6 +13,9 @@ SAFE_DEFAULT = {
     'suggested_category': 'general',
     'suggested_priority': 'low',
 }
+
+GROQ_API_URL = 'https://api.groq.com/openai/v1/chat/completions'
+GROQ_MODEL = 'llama-3.1-8b-instant'
 
 CLASSIFY_PROMPT = """You are a support ticket classifier.
 
@@ -48,20 +51,27 @@ def classify_ticket(description: str) -> dict:
         return SAFE_DEFAULT
 
     try:
-        from groq import Groq
-
-        client = Groq(api_key=api_key)
         prompt = CLASSIFY_PROMPT.format(description=description)
+        payload = {
+            'model': GROQ_MODEL,
+            'messages': [{'role': 'user', 'content': prompt}],
+            'temperature': 0.1,
+            'max_tokens': 64,
+        }
+        headers = {
+            'Authorization': f'Bearer {api_key}',
+            'Content-Type': 'application/json',
+        }
 
-        response = client.chat.completions.create(
-            model="llama3-8b-8192",
-            messages=[{"role": "user", "content": prompt}],
-            temperature=0.1,
-            max_tokens=64,
-            timeout=10,
+        response = requests.post(
+            GROQ_API_URL,
+            json=payload,
+            headers=headers,
+            timeout=15,
         )
+        response.raise_for_status()
 
-        raw = response.choices[0].message.content.strip()
+        raw = response.json()['choices'][0]['message']['content'].strip()
         data = json.loads(raw)
 
         category = str(data.get('category', '')).lower()
