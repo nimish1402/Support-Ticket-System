@@ -1,4 +1,5 @@
 from django.db import models
+from django.utils import timezone
 
 
 class Ticket(models.Model):
@@ -30,6 +31,15 @@ class Ticket(models.Model):
         default=Status.OPEN,
     )
     created_at = models.DateTimeField(auto_now_add=True)
+    resolved_at = models.DateTimeField(null=True, blank=True)
+
+    def save(self, *args, **kwargs) -> None:
+        if self.status in (self.Status.RESOLVED, self.Status.CLOSED):
+            if not self.resolved_at:
+                self.resolved_at = timezone.now()
+        else:
+            self.resolved_at = None
+        super().save(*args, **kwargs)
 
     class Meta:
         ordering = ['-created_at']

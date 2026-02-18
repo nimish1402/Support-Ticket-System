@@ -6,7 +6,7 @@ class TicketSerializer(serializers.ModelSerializer):
     class Meta:
         model = Ticket
         fields = '__all__'
-        read_only_fields = ('id', 'created_at')
+        read_only_fields = ('id', 'created_at', 'resolved_at')
 
     def validate_category(self, value: str) -> str:
         valid = [c[0] for c in Ticket.Category.choices]
