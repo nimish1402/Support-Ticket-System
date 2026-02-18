@@ -125,6 +125,13 @@ export default function TicketList({ refreshTrigger }) {
         setTickets((prev) => prev.map((t) => (t.id === updated.id ? updated : t)))
     }
 
+    const resetFilters = () => {
+        setFilters({ category: '', priority: '', status: '', search: '' })
+        setSearchInput('')
+    }
+
+    const hasActiveFilters = filters.category || filters.priority || filters.status || filters.search
+
     return (
         <div>
             <div className="page-header">
@@ -173,6 +180,16 @@ export default function TicketList({ refreshTrigger }) {
                         <option key={s} value={s}>{s.replace('_', ' ').replace(/\b\w/g, (c) => c.toUpperCase())}</option>
                     ))}
                 </select>
+
+                {hasActiveFilters && (
+                    <button
+                        onClick={resetFilters}
+                        className="btn btn-secondary"
+                        style={{ padding: '8px 16px', fontSize: '0.85rem' }}
+                    >
+                        ✕ Clear Filters
+                    </button>
+                )}
             </div>
 
             {error && <div className="error-banner">{error}</div>}
